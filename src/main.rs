@@ -66,10 +66,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .filter(|element| element.value().attr("href").unwrap().contains("/tag/"))
         .collect();
     let name = document.select(&name_selector).collect::<Vec<_>>()[0].inner_html();
-    println!("\n{}\n", name.yellow());
+    println!("\n{} {}\n", "Title:".bold().yellow(), name.yellow());
 
     let span_selector = Selector::parse("span").unwrap();
 
+    print!("{}", "Tags: ".bold().cyan());
     let mut tags_text = tags
         .iter()
         .map(|element| element.select(&span_selector).collect::<Vec<ElementRef>>()[0].inner_html())
