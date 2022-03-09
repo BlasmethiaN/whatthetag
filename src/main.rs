@@ -5,6 +5,7 @@ use colored::*;
 use scraper::{ElementRef, Html, Selector};
 use serde_derive::Deserialize;
 use std::collections::HashSet;
+use std::env;
 use std::fs;
 
 #[derive(Deserialize, Debug)]
@@ -17,7 +18,7 @@ struct Config {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = Command::new("whatthetag")
         .version("1.0")
-        .author("BlasmethiaN")
+        .author("BlasmethiaN feat. sproott")
         .about("Search for doujins safely.")
         .arg(Arg::new("number").index(1))
         .arg(
@@ -37,7 +38,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // .arg(Arg::new("image").short('i').long("img").required(false))
         .get_matches();
 
-    let config_str = fs::read_to_string("/home/blasmesian/.config/whatthetag/config.toml")?;
+    let config_file_name = env::var("XDG_CONFIG_HOME").unwrap_or(env::var("HOME")? + "/.config")
+        + "/whatthetag/config.toml";
+    let config_str = fs::read_to_string(config_file_name).unwrap_or("".to_string());
     let config: Config = toml::from_str(&config_str)?;
 
     let number = matches.value_of("number").unwrap();
@@ -89,5 +92,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-// TODO xdg config home
 // TODO image printing
