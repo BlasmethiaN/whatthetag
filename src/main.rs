@@ -1,7 +1,6 @@
-#![feature(iter_intersperse)]
-
 use clap::{Arg, Command};
 use colored::*;
+use itertools::intersperse;
 use scraper::{ElementRef, Html, Selector};
 use serde_derive::Deserialize;
 use std::collections::HashSet;
@@ -76,20 +75,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|element| element.select(&span_selector).collect::<Vec<ElementRef>>()[0].inner_html())
         .collect::<Vec<_>>();
     tags_text.sort();
-    tags_text
-        .iter()
-        .map(|tag| {
+    intersperse(
+        tags_text.iter().map(|tag| {
             if white_list.contains(tag) {
                 return tag.green();
             } else if black_list.contains(tag) {
                 return tag.red();
             }
             tag.normal()
-        })
-        .intersperse(", ".normal())
-        .for_each(|s| print!("{}", s));
+        }),
+        ", ".normal(),
+    )
+    .for_each(|s| print!("{}", s));
     println!("");
     Ok(())
 }
 
 // TODO image printing
+// TODO nonexistent doujin error
