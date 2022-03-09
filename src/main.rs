@@ -3,7 +3,15 @@
 use clap::{Arg, Command};
 use colored::*;
 use scraper::{ElementRef, Html, Selector};
+use serde_derive::Deserialize;
 use std::collections::HashSet;
+use std::fs;
+
+#[derive(Deserialize, Debug)]
+struct Config {
+    white_list: Option<HashSet<String>>,
+    black_list: Option<HashSet<String>>,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -26,19 +34,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .takes_value(true)
                 .required(false),
         )
-        .arg(Arg::new("image").short('i').long("img").required(false))
+        // .arg(Arg::new("image").short('i').long("img").required(false))
         .get_matches();
 
+    let config_str = fs::read_to_string("/home/blasmesian/.config/whatthetag/config.toml")?;
+    let config: Config = toml::from_str(&config_str)?;
+
     let number = matches.value_of("number").unwrap();
-    let image = matches.is_present("image");
+    // let image = matches.is_present("image");
     let white_list = matches
         .values_of("white_list")
-        .map(|vals| vals.collect::<HashSet<_>>())
-        .unwrap_or(HashSet::new());
+        .map(|vals| vals.map(String::from).collect::<HashSet<_>>())
+        .unwrap_or(config.white_list.unwrap_or(HashSet::new()));
     let black_list = matches
         .values_of("black_list")
-        .map(|vals| vals.collect::<HashSet<_>>())
-        .unwrap_or(HashSet::new());
+        .map(|vals| vals.map(String::from).collect::<HashSet<_>>())
+        .unwrap_or(config.black_list.unwrap_or(HashSet::new()));
     let url = "https://nhentai.net/g/";
     let resp = reqwest::get(String::from(url) + number)
         .await?
@@ -65,9 +76,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tags_text
         .iter()
         .map(|tag| {
-            if white_list.contains(&tag.as_str()) {
+            if white_list.contains(tag) {
                 return tag.green();
-            } else if black_list.contains(&tag.as_str()) {
+            } else if black_list.contains(tag) {
                 return tag.red();
             }
             tag.normal()
@@ -77,3 +88,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("");
     Ok(())
 }
+
+// TODO xdg config home
+// TODO image printing
