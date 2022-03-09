@@ -94,3 +94,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // TODO image printing
 // TODO nonexistent doujin error
+// TODO show help with wrong usage (panic!)
