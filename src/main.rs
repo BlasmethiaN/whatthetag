@@ -1,4 +1,5 @@
 use clap::{Arg, Command};
+use std::process::exit;
 use colored::*;
 use itertools::intersperse;
 use serde_derive::Deserialize;
@@ -53,11 +54,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .unwrap_or(config.black_list.unwrap_or(HashSet::new()));
   let url = "https://nhentai.net/api/gallery/";
   let resp = reqwest::get(String::from(url) + number)
-    .await?
+    .await?;
+
+  if !resp.status().is_success() {
+    println!("{}", "Error: Doujin not found.".red());
+    exit(1);
+  }
+
+  let response_content = resp
     .text()
     .await?;
 
-  let parsed_respose: serde_json::Value = serde_json::from_str(&resp)?;
+  let parsed_respose: serde_json::Value = serde_json::from_str(&response_content)?;
 
   let tags = parsed_respose["tags"]
     .as_array()
