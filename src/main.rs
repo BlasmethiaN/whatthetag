@@ -1,11 +1,11 @@
 use clap::{Arg, Command};
-use std::process::exit;
 use colored::*;
 use itertools::intersperse;
 use serde_derive::Deserialize;
 use std::collections::HashSet;
 use std::env;
 use std::fs;
+use std::process::exit;
 
 #[derive(Deserialize, Debug)]
 struct Config {
@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .version("1.0")
     .author("BlasmethiaN feat. sproott")
     .about("Search for doujins safely.")
-    .arg(Arg::new("number").index(1))
+    .arg(Arg::new("number").index(1).required(true))
     .arg(
       Arg::new("white_list")
         .short('w')
@@ -53,17 +53,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .map(|vals| vals.map(String::from).collect::<HashSet<_>>())
     .unwrap_or(config.black_list.unwrap_or(HashSet::new()));
   let url = "https://nhentai.net/api/gallery/";
-  let resp = reqwest::get(String::from(url) + number)
-    .await?;
+  let resp = reqwest::get(String::from(url) + number).await?;
 
   if !resp.status().is_success() {
     println!("{}", "Error: Doujin not found.".red());
     exit(1);
   }
 
-  let response_content = resp
-    .text()
-    .await?;
+  let response_content = resp.text().await?;
 
   let parsed_respose: serde_json::Value = serde_json::from_str(&response_content)?;
 
@@ -87,7 +84,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   println!(
     "{} {}\n",
     "Artists:".bold().yellow(),
-    artists.join(", ").normal()
+    if artists.len() > 0 {
+      artists.join(", ").normal()
+    } else {
+      "Unknown".normal()
+    }
   );
 
   print!("{}", "Tags: ".bold().cyan());
